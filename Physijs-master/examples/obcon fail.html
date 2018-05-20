@@ -27,7 +27,7 @@
 	Physijs.scripts.ammo = 'examples/js/ammo.js';
 	
 	var initScene, render, renderer, scene, camera, box;
-	var controls;
+	var controls, ground_material, ground, loader;
 	
 	initScene = function() {
 		renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -46,6 +46,36 @@
 		camera.lookAt( scene.position );
 		controls = new THREE.OrbitControls(camera, renderer.domElement);
 		scene.add( camera );
+		
+		//Loader
+		loader = new THREE.TextureLoader();
+		
+		// Materials
+		ground_material = Physijs.createMaterial(
+			new THREE.MeshLambertMaterial({ map: loader.load( 'images/rocks.jpg' ) }),
+			.8, // high friction
+			.4 // low restitution
+		);
+		ground_material.map.wrapS = ground_material.map.wrapT = THREE.RepeatWrapping;
+		ground_material.map.repeat.set( 3, 3 );
+		
+		//Ground
+		var ground_geometry = new THREE.PlaneGeometry( 300, 300, 100, 100 );
+		for ( var i = 0; i < ground_geometry.vertices.length; i++ ) {
+			var vertex = ground_geometry.vertices[i];
+			//vertex.y = NoiseGen.noise( vertex.x / 30, vertex.z / 30 ) * 1;
+		}
+		ground_geometry.computeFaceNormals();
+		ground_geometry.computeVertexNormals();
+
+		ground = new Physijs.HeightfieldMesh(
+				ground_geometry,
+				ground_material,
+				0 // mass
+		);
+		ground.rotation.x = -Math.PI / 2;
+		ground.receiveShadow = true;
+		scene.add( ground );
 		
 		// Box
 		box = new Physijs.BoxMesh(
