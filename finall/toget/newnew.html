@@ -1,0 +1,1135 @@
+<html><head>
+<style>
+#info {
+  position: absolute;
+  top: 0px;
+  width: 100%;
+  padding: 10px;
+  text-align: center;
+  color: #ffff00
+}
+#Score {
+  position: absolute;
+  top: 0px;
+  width: 150%;
+  padding: 10px;
+  text-align: center;
+  color: #ffff00
+}
+#remainingTime {
+  position: absolute;
+  top: 0px;
+  width: 148.5%;
+  padding: 25px;
+  text-align: center;
+  color: #ffff00
+}
+
+body {
+  overflow: hidden;
+}
+
+
+</style>
+</head>
+
+<body> 
+
+<div id="info">phy games<br>
+	<strong>shift + click</strong>: rotate <br>
+</div>
+
+
+<div id="remainingTime">Time : 
+<p id="counter" style="position:absolute;top:10px;left:1385px">0</p>
+</div>
+
+<div id="Score">Score : 
+<p id="score1" style="position:absolute;top:-5px;left:1385px">10000</p>
+</div>
+
+<audio id="soundtrack" autoplay="" loop="" style="display:none">
+	<source src="sound/BGM.mp3" type="audio/mp3">
+</audio>
+<audio id="clear" style="display:none">
+	<source src="sound/Clearance.mp3" type="audio/mp3">
+</audio>
+<audio id="click" style="display:none">
+	<source src="sound/click.mp3" type="audio/mp3">
+</audio>
+<audio id="crash" style="display:none">
+	<source src="sound/punch1.mp3" type="audio/mp3">
+</audio>
+<audio id="over" style="display:none">
+	<source src="sound/over.mp3" type="audio/mp3">
+</audio>
+<audio id="springcrash" style="display:none">
+	<source src="sound/Springcash.mp3" type="audio/mp3">
+</audio>
+
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/84/three.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/stats.js/r16/Stats.min.js"></script>
+<script src="https://code.jquery.com/jquery-2.1.4.min.js"></script>
+<script src="https://jyunming-chen.github.io/tutsplus/js/KeyboardState.js"></script>
+
+<script src="Ball.js"></script>
+<script src="Rect.js"></script>
+<script src="ggrect.js"></script>
+<script>
+
+
+
+
+var intervalId;
+var count = 10;
+var score = 10000;
+var score1 = 10000;
+var ss=0;
+//document.getElementById('score1').textContent = `${score}`;  
+var seconds = 10
+
+ function timeCount (){
+	setInterval(function () {
+            //裡面放要執行的方法
+			console.log("1"+seconds);
+                if (seconds > 0) {
+                    seconds--;
+                    }
+            }, 1000);
+			
+			}
+
+
+
+function updateCounter() {
+  var counter = count;
+  document.getElementById('counter').textContent = `${count}`;  
+  if(count >0) {
+      count--;
+  }  
+  if(count == 0){
+      ss=1;
+	  //console.log("time up")
+	  //thisfinish();
+  }`${score}`
+}
+
+
+///////////////////////////////////////
+function clickplay(){
+	click.pause();
+    click.currentTime = 0;
+	click.play();
+}
+
+function springPlay(){
+	springcrash.pause();
+    springcrash.currentTime = 0;
+	springcrash.play();
+}
+
+function checkIntersect (rect, ball) {
+  // move coordinate origin to circle.center
+	let point = rect.center.clone().sub(ball.center)
+  let rectCenter = new THREE.Vector3(point.dot(rect.axes[0]), point.dot(rect.axes[1]), 0);
+  
+  rmax = [ rectCenter.x + rect.sizes[0]/2, rectCenter.y + rect.sizes[1]/2 ]
+  rmin = [ rectCenter.x - rect.sizes[0]/2, rectCenter.y - rect.sizes[1]/2 ]
+  //console.log()
+ 
+  let rad = ball.rad;
+  //console.log (rect.sizes);
+  if (rmax[0] < 0) {  // R to left of center
+  	if (rmax[1] < 0)  // R in lower left corner
+    	return (rmax[0]*rmax[0] + rmax[1]*rmax[1] < rad*rad ) ? /*numtest(2,0)*/ 44: -1;
+    else if (rmin[1] > 0)  // R in upper left corner
+    	return (rmax[0]*rmax[0] + rmin[1]*rmin[1] < rad*rad ) ? /*numtest(0,3)*/ 11: -1;
+    else // R to the west of circle
+    	return ( Math.abs(rmax[0]) < rad ) ? 0 : -1;
+  } else if (rmin[0] > 0) {  // R to right of center
+  	if (rmax[1] < 0)  // R in lower right corner
+    	return (rmin[0]*rmin[0] + rmax[1]*rmax[1] < rad*rad) ?/* numtest(1,2) */33: -1;
+    else if (rmin[1] > 0) // R in upper right corner
+    	return (rmin[0]*rmin[0] + rmin[1]*rmin[1] < rad*rad) ?/* numtest(3,1) */22: -1;
+    else  // R to the east of circle
+    	return ( Math.abs(rmin[0]) < rad) ? 1 : -1;
+  } else {
+  	if (rmax[1] < 0)  // R: south of circle
+    	return ( Math.abs(rmax[1]) < rad ) ? 2 : -1;
+    else if (rmin[1] > 0)  // R: north of circle
+    	return ( rmin[1] < rad ) ? 3 : -1
+    else
+    	return 5;  
+  }
+
+}
+
+function numtest(num1,num2) {
+   var arr = [num1,num2];
+	var ran = Math.floor(Math.random() * 2);
+	return arr[ran]; 
+}
+
+function smallRE(num) {
+
+	for(let i=0;i<balls.length;i++){
+		balls[i].delet()
+		balls[i].velzero()
+	}
+	for(let x = 0; x < objects.length ; x++){
+		if(objects[x].type === 'ball'){
+			objects[x] = [];
+		}
+	}
+	
+	balls = [];
+	if(num == 0){
+	level0ballmake()
+	}
+	if(num==1){
+	level1ballmake();
+	}
+	if(num==2){
+	level0ballmake();
+	}
+	if(num==3){
+	level0ballmake();
+	}
+	seconds = 10;
+	 
+}
+
+function bigRE(num) {
+	while(scene.children.length > 0){ 
+    scene.remove(scene.children[0]); 
+}
+
+	balls = [];
+	objects = [];
+	rect = [];
+	cube = [];
+	pickables = [];
+	for(var g = 0 ; g<angle.length;g++){
+	angle[g] = 0;
+	}
+	if(num==0){
+	level0make();
+	level0ballmake();
+	}
+	if(num==1){
+	level1make();
+	level1ballmake();
+	}
+	if(num==2){
+
+	}
+	if(num==3){
+
+	}
+	makecilck();
+}
+
+function collision () {
+
+
+	for (let i = 0; i < objects.length; i++) {
+		for (let j = i+1; j < objects.length; j++) {
+			intersect (objects[i], objects[j]);
+		}
+	}
+
+}
+
+function intersect (obj1, obj2) {
+	let hit;
+	
+	if (obj1.type === 'ball' && obj2.type === 'rect') {
+		if((hit = checkIntersect(obj2, obj1))>=0){
+			console.log(hit)
+			ballrectIntersect (obj2, obj1,hit)
+			}
+	}
+	
+	else if (obj1.type === 'rect' && obj2.type === 'ball') {
+		if((hit = checkIntersect(obj1, obj2))>=0){
+			console.log(hit)
+			ballrectIntersect (obj1, obj2,hit)
+			}
+	}
+	
+	if (obj1.type === 'ball' && obj2.type === 'finish') {
+		if((hit = checkIntersect(obj2, obj1))>=0){
+			console.log(hit)
+			//ballrectIntersect (obj2, obj1,hit)
+			setTimeout(function(){ clearInterval(intervalId);}, 10);
+			score=count*100+100;
+			ss=1;
+			//console.log(score);
+			//
+			start = !start;
+			obj1.moveTo(100,0)
+			thisfinish();
+			}
+	}
+	
+	else if (obj1.type === 'finish' && obj2.type === 'ball') {
+		if((hit = checkIntersect(obj1, obj2))>=0){
+			console.log(hit)
+				//ballrectIntersect (obj1, obj2,hit)
+			setTimeout(function(){ clearInterval(intervalId);}, 10);
+			score=count*100+100;
+			ss=1;
+			//console.log(score);
+			//
+			start = !start;
+					obj2.moveTo(100,0)
+			thisfinish();
+			}
+	}
+	
+	else if (obj1.type === 'ball' && obj2.type === 'ball') 
+		ballBallIntersect (obj1, obj2,hit)
+	}
+	
+function myStop(){
+    crash.pause();
+    crash.currentTime = 0;
+}
+
+function ballrectIntersect (rect, ball, hit) {
+	//let hit;
+	//if((hit = checkIntersect(rect, ball))>=0){
+	if(rect.resCoeff != 0.9){
+		springPlay();
+	}
+	else{
+		myStop();
+		crash.play();
+	}
+	if(hit === 0){
+		let point = new THREE.Vector3();
+		//rect.obj.updateMatrix()
+    var b = rect.obj.localToWorld(new THREE.Vector3(0,0,0))
+    let a = rect.obj.localToWorld(new THREE.Vector3(1,0,0))
+	//console.log( a)
+    a.sub(b).normalize
+    //console.log(a)
+    rect.normal.copy(a)
+    
+		point.copy (ball.pos).sub (rect.pc);
+		//console.log(rect.normal)
+		if (point.dot(rect.normal) <rect.sizes[0]/2 + ball.rad) {  // close enough
+			let vn;  // normal velocity component
+    
+			if ((vn = ball.vel.dot (rect.normal)) < -3.0) {  // run towards plane
+				console.log ('vn: '+vn)
+				ball.vel.sub (ball.vel.clone().projectOnVector 	(rect.normal).multiplyScalar (1+rect.resCoeff))
+			} else if (vn <= 0) {  // contact
+			ball.force.projectOnPlane (rect.normal);  // force correction
+		  //console.log ('force: ' + ball.force.y)
+			ball.vel.projectOnPlane (rect.normal)   // vel correction
+		  //console.log ('vel: ' + ball.vel.y)
+			ball.pos.copy (point.projectOnPlane (rect.normal).add(rect.pc).add(rect.normal.clone().multiplyScalar(ball.rad+rect.sizes[0]/2)))   // position correction
+			
+			}
+		}
+	}
+
+
+	if(hit === 1){
+		let point = new THREE.Vector3();
+    
+    var b = rect.obj.localToWorld(new THREE.Vector3(0,0,0))
+    let a = rect.obj.localToWorld(new THREE.Vector3(-1,0,0))
+	//console.log(a)
+    a.sub(b).normalize
+    //console.log(a)
+    rect.normal.copy(a)
+    
+		point.copy (ball.pos).sub (rect.pc);
+		if (point.dot(rect.normal) <rect.sizes[0]/2 + ball.rad) {  // close enough
+			let vn;  // normal velocity component
+			
+			if ((vn = ball.vel.dot (rect.normal)) < -3.0) {  // run towards plane
+				console.log ('vn: '+vn)
+				ball.vel.sub (ball.vel.clone().projectOnVector 	(rect.normal).multiplyScalar (1+rect.resCoeff))
+			} else if (vn <= 0) {  // contact
+			ball.force.projectOnPlane (rect.normal);  // force correction
+		  //console.log ('force: ' + ball.force.y)
+			ball.vel.projectOnPlane (rect.normal)   // vel correction
+		  //console.log ('vel: ' + ball.vel.y)
+			ball.pos.copy (point.projectOnPlane (rect.normal).add(rect.pc).add(rect.normal.clone().multiplyScalar(ball.rad+rect.sizes[0]/2)))   // position correction
+			}
+		}
+	}
+
+
+	if(hit === 2){
+		let point = new THREE.Vector3();
+		
+		 var b = rect.obj.localToWorld(new THREE.Vector3(0,0,0))
+		let a = rect.obj.localToWorld(new THREE.Vector3(0,1,0))
+		//console.log(a)
+		a.sub(b).normalize
+		rect.normal.copy(a)
+		point.copy (ball.pos).sub (rect.pc);
+		if (point.dot(rect.normal) <rect.sizes[1]/2 + ball.rad) {  // close enough
+			let vn;  // normal velocity component
+			
+			if ((vn = ball.vel.dot (rect.normal)) < -3.0) {  // run towards plane
+				console.log ('vn: '+vn)
+				ball.vel.sub (ball.vel.clone().projectOnVector 	(rect.normal).multiplyScalar (1+rect.resCoeff))
+			} else if (vn <= 0) {  // contact
+			ball.force.projectOnPlane (rect.normal);  // force correction
+		  //console.log ('force: ' + ball.force.y)
+			ball.vel.projectOnPlane (rect.normal)   // vel correction
+		  //console.log ('vel: ' + ball.vel.y)
+			ball.pos.copy (point.projectOnPlane (rect.normal).add(rect.pc).add(rect.normal.clone().multiplyScalar(ball.rad+rect.sizes[1]/2)))   // position correction
+			}
+		}
+	}
+
+
+	if(hit === 3){
+		let point = new THREE.Vector3();
+    
+    var b = rect.obj.localToWorld(new THREE.Vector3(0,0,0))
+    let a = rect.obj.localToWorld(new THREE.Vector3(0,-1,0))
+    a.sub(b).normalize
+    rect.normal.copy(a)
+		point.copy (ball.pos).sub (rect.pc);
+		
+		if (point.dot(rect.normal) <rect.sizes[1]/2 + ball.rad) {  // close enough
+			let vn;  // normal velocity component
+			
+			if ((vn = ball.vel.dot (rect.normal)) < -3.0) {  // run towards plane
+				console.log ('vn: '+vn)
+				ball.vel.sub (ball.vel.clone().projectOnVector 	(rect.normal).multiplyScalar (1+rect.resCoeff))
+			} else if (vn <= 0) {  // contact
+			ball.force.projectOnPlane (rect.normal);  // force correction
+		  //console.log ('force: ' + ball.force.y)
+			ball.vel.projectOnPlane (rect.normal)   // vel correction
+		  //console.log ('vel: ' + ball.vel.y)
+			ball.pos.copy (point.projectOnPlane (rect.normal).add(rect.pc).add(rect.normal.clone().multiplyScalar(ball.rad+rect.sizes[1]/2)))   // position correction
+			}
+		}
+	}
+	
+	if(hit === 11){
+	
+			var b = rect.obj.localToWorld(new THREE.Vector3(rect.sizes[0]/2,0,0))
+			let a = rect.obj.localToWorld(new THREE.Vector3(0,-rect.sizes[1]/2,0))
+			a.add(b)
+			a.sub(rect.pc)
+			var ball1pc = new THREE.Vector3();
+			ball1pc.copy(a);
+			console.log(ball1pc);
+			var b1rad =ball.rad;
+			console.log('ba1rad: ' + b1rad);
+			
+			let centerDist = ball1pc.distanceTo (ball.pos)
+			if (centerDist < ball.rad) {
+			console.log ('ball-ball hit');
+			let p1 = ball1pc;
+			let p2 = ball.pos;
+			let n = p1.clone().sub(p2).normalize();
+			//console.log(ball.vel)
+			let v12 = ball.vel.clone().sub((ball.vel).add(ball.vel));
+			console.log(v12)
+			
+			//b1.vel.sub (n.clone().multiplyScalar (v12.dot(n)*2*b2.mass/(b1.mass+b2.mass) ))
+			ball.vel.add (n.clone().multiplyScalar (v12.dot(n)*2*1.2 ))
+			
+			//console.log ('after:'+b1.vel.x)
+				// position correction
+			let vv = ball.pos.clone().sub(ball1pc);
+			let overlap = (ball.rad) - vv.length();
+			vv.normalize();
+			//b1.pos.add ( vv.clone().multiplyScalar  (-overlap/2))
+			//ball.pos.add ( vv.clone().multiplyScalar  (overlap/2))
+			
+			}
+		}
+		
+	if(hit === 22){
+	
+			var b = rect.obj.localToWorld(new THREE.Vector3(-rect.sizes[0]/2,0,0))
+			let a = rect.obj.localToWorld(new THREE.Vector3(0,-rect.sizes[1]/2,0))
+			a.add(b)
+			a.sub(rect.pc)
+			var ball1pc = new THREE.Vector3();
+			ball1pc.copy(a);
+			console.log(ball1pc);
+			var b1rad =ball.rad;
+			console.log('ba1rad: ' + b1rad);
+			
+			let centerDist = ball1pc.distanceTo (ball.pos)
+			if (centerDist < ball.rad) {
+			console.log ('ball-ball hit');
+			let p1 = ball1pc;
+			let p2 = ball.pos;
+			let n = p1.clone().sub(p2).normalize();
+			//console.log(ball.vel)
+			let v12 = ball.vel.clone().sub((ball.vel).add(ball.vel));
+			console.log(v12)
+			
+			//b1.vel.sub (n.clone().multiplyScalar (v12.dot(n)*2*b2.mass/(b1.mass+b2.mass) ))
+			ball.vel.add (n.clone().multiplyScalar (v12.dot(n)*2*1.2 ))
+			
+			//console.log ('after:'+b1.vel.x)
+				// position correction
+			let vv = ball.pos.clone().sub(ball1pc);
+			let overlap = (ball.rad) - vv.length();
+			vv.normalize();
+			//b1.pos.add ( vv.clone().multiplyScalar  (-overlap/2))
+			//ball.pos.add ( vv.clone().multiplyScalar  (overlap/2))
+			
+			}
+		}
+	
+	if(hit === 33){
+	
+			var b = rect.obj.localToWorld(new THREE.Vector3(-rect.sizes[0]/2,0,0))
+			let a = rect.obj.localToWorld(new THREE.Vector3(0,rect.sizes[1]/2,0))
+			a.add(b)
+			a.sub(rect.pc)
+			var ball1pc = new THREE.Vector3();
+			ball1pc.copy(a);
+			console.log(ball1pc);
+			var b1rad =ball.rad;
+			console.log('ba1rad: ' + b1rad);
+			
+			let centerDist = ball1pc.distanceTo (ball.pos)
+			if (centerDist < ball.rad) {
+			console.log ('ball-ball hit');
+			let p1 = ball1pc;
+			let p2 = ball.pos;
+			let n = p1.clone().sub(p2).normalize();
+			//console.log(ball.vel)
+			let v12 = ball.vel.clone().sub((ball.vel).add(ball.vel));
+			console.log(v12)
+			
+			//b1.vel.sub (n.clone().multiplyScalar (v12.dot(n)*2*b2.mass/(b1.mass+b2.mass) ))
+			ball.vel.add (n.clone().multiplyScalar (v12.dot(n)*2*1 ))
+			
+			//console.log ('after:'+b1.vel.x)
+				// position correction
+			let vv = ball.pos.clone().sub(ball1pc);
+			let overlap = (ball.rad) - vv.length();
+			vv.normalize();
+			//b1.pos.add ( vv.clone().multiplyScalar  (-overlap/2))
+			//ball.pos.add ( vv.clone().multiplyScalar  (overlap/2))
+			
+			}
+		}
+		
+	if(hit === 44){
+	
+			var b = rect.obj.localToWorld(new THREE.Vector3(rect.sizes[0]/2,0,0))
+			let a = rect.obj.localToWorld(new THREE.Vector3(0,rect.sizes[1]/2,0))
+			a.add(b)
+			a.sub(rect.pc)
+			var ball1pc = new THREE.Vector3();
+			ball1pc.copy(a);
+			console.log(ball1pc);
+			var b1rad =ball.rad;
+			console.log('ba1rad: ' + b1rad);
+			
+			let centerDist = ball1pc.distanceTo (ball.pos)
+			if (centerDist < ball.rad) {
+			console.log ('ball-ball hit');
+			let p1 = ball1pc;
+			let p2 = ball.pos;
+			let n = p1.clone().sub(p2).normalize();
+			console.log(ball.vel)
+			let v12 = ball.vel.clone().sub((ball.vel).add(ball.vel));
+			console.log(v12)
+			
+			//b1.vel.sub (n.clone().multiplyScalar (v12.dot(n)*2*b2.mass/(b1.mass+b2.mass) ))
+			ball.vel.add (n.clone().multiplyScalar (v12.dot(n)*2*1.2 ))
+			//console.log ('after:'+b1.vel.x)
+					// position correction
+			let vv = ball.pos.clone().sub(ball1pc);
+			let overlap = (b1rad) - vv.length();
+			vv.normalize();
+			//b1.pos.add ( vv.clone().multiplyScalar  (-overlap/2))
+			//ball.pos.add ( vv.clone().multiplyScalar  (overlap/2))
+			}
+		}
+	}
+
+function ballBallIntersect (b1, b2) {
+	let centerDist = b1.pos.distanceTo (b2.pos)
+  if (centerDist < b1.rad + b2.rad) {
+
+  	console.log ('ball-ball hit')
+	let p1 = b1.pos;
+    let p2 = b2.pos;
+    let n = p1.clone().sub(p2).normalize();
+	
+    let v12 = b1.vel.clone().sub(b2.vel)
+    b1.vel.sub (n.clone().multiplyScalar (v12.dot(n)*2*b2.mass/(b1.mass+b2.mass) ))
+    b2.vel.add (n.clone().multiplyScalar (v12.dot(n)*2*b1.mass/(b1.mass+b2.mass) ))
+    //console.log ('after:'+b1.vel.x)
+		// position correction
+    let vv = b2.pos.clone().sub(b1.pos);
+    let overlap = (b2.rad+b1.rad) - vv.length();
+    vv.normalize();
+    b1.pos.add ( vv.clone().multiplyScalar  (-overlap/2))
+    b2.pos.add ( vv.clone().multiplyScalar  (overlap/2))
+  }
+}
+
+var bigcube = new THREE.Object3D();
+
+function thisfinish(){
+
+	//var bigcube = new THREE.Object3D();
+	clear.play();
+	let loader = new THREE.TextureLoader()
+	loader.crossOrigin = '';
+	
+	var finishcube =  new THREE.Mesh(new THREE.PlaneGeometry(450, 300), new THREE.MeshBasicMaterial({
+    transparent: true,
+    opacity: 0
+     }));
+	finishcube.number = 0;//過關換圖
+	////
+	if(ss===1){    
+		document.getElementById('score1').textContent = `${score}`; 
+	}
+	if(ss===0) {
+      	//document.getElementById('score1').textContent = "0"; 
+	}
+	////
+	
+	var finishplane =  new THREE.Mesh(new THREE.PlaneGeometry(200, 150), new THREE.MeshBasicMaterial({
+    transparent: true,
+    opacity: 0.5,
+    visible: true
+  }));
+	finishplane.number = 0;
+
+	var click1 = new THREE.Mesh(new THREE.CircleGeometry(13,32),new THREE.MeshBasicMaterial({
+	transparent: true,
+	map: loader.load("strts/restart.png")
+	}));
+	click1.number = -4 ;
+	click1.position.set(-40,-60,0);
+
+	var click2 = new THREE.Mesh(new THREE.CircleGeometry(13,32),new THREE.MeshBasicMaterial({
+	transparent: true,
+	map: loader.load("strts/start.png")
+	}));
+	click2.number = -5;
+	click2.position.set(40,-60,0);
+  
+	bigcube.add(click1);
+	bigcube.add(click2);
+	bigcube.add(finishplane);
+	bigcube.add(finishcube);
+	
+	pickables.push(bigcube)
+	/*pickables.push(click2)
+	pickables.push(finishplane)
+	pickables.push(finishcube)
+	*/
+	bigcube.position.z = 100
+	scene.add(bigcube);
+}
+
+function refinish(num){
+	while(scene.children.length > 0){ 
+    scene.remove(scene.children[0]); 
+}
+
+	balls = [];
+	objects = [];
+	rect = [];
+	cube = [];
+	pickables = [];
+	bigcube = new THREE.Object3D();
+	//console.log(bigcube)
+	for(var g = 0 ; g<angle.length;g++){
+	angle[g] = 0;
+	}
+	if(num==0){
+	level0make();
+	level0ballmake()
+	}
+	if(num==1){
+	level1make();
+	level1ballmake();
+	}
+	if(num==2){
+	level0make();
+	level0ballmake();
+	}
+	if(num==3){
+	level0make();
+	level0ballmake();
+	}
+	
+	makecilck()
+}
+
+function buildlevel(num){
+	while(scene.children.length > 0){ 
+    scene.remove(scene.children[0]); 
+}
+
+	balls = [];
+	objects = [];
+	rect = [];
+	cube = [];
+	pickables = [];
+	bigcube = new THREE.Object3D();
+	if(num == 0){
+	
+	}
+	if(num == 1){
+	
+	level1make();
+	level1ballmake();
+		
+	}
+	if(num == 2){
+	
+	}
+	
+	if(num == 3){
+	}
+	makecilck()
+}
+
+var start = false;
+var addf = false;
+var isShiftDown = false
+var camera, scene, renderer;
+var stats;
+var objects, balls;
+var ball;
+var angle = [0];
+////////////////////////////
+var brick;
+var mouse = new THREE.Vector2();
+var raycaster , raycaster1;
+var pickables = [];
+var cube = [];
+var movetest;
+var keyboard = new KeyboardState();
+var texture;
+var levelnum = 0;
+var level0 = new THREE.Object3D();
+
+
+init();
+animate();
+
+
+function init() {
+	
+	/////////sound
+  var soundTrack = document.getElementById ('soundtrack');
+  var clear = document.getElementById ('clear');
+  var click = document.getElementById ('click');
+  var crash = document.getElementById ('crash');
+  var over = document.getElementById ('over');
+  var springcrash = document.getElementById ('springcrash');
+  crash.volume = 0.09;
+  soundtrack.volume = 0.03;
+  click.volume = 0.15;
+  springcrash.volume = 0.09
+  clear.volume = 0.09;
+  /////////////////////////////////////////////////////////////////////
+  renderer = new THREE.WebGLRenderer();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.setClearColor(0x888888);
+  
+  document.body.appendChild(renderer.domElement);
+  
+  whRatio = window.innerWidth/window.innerHeight
+	halfH = 140;
+  halfW = halfH*whRatio
+  // STATS
+	/*stats = new Stats();
+	stats.domElement.style.position = 'absolute';
+	stats.domElement.style.top = '0px';
+	stats.domElement.style.zIndex = 100;
+	document.body.appendChild( stats.domElement );	
+  */
+  
+
+  let loader = new THREE.TextureLoader()
+	loader.crossOrigin = '';
+   scene = new THREE.Scene();
+   scene.background = loader.load("https://i.imgur.com/PaWt7bj.jpg")
+     camera = new THREE.OrthographicCamera(-halfW, halfW, halfH, -halfH, -10, 100);
+   camera.position.z = 100;
+
+	let grid = new THREE.GridHelper (200,20, 'red','white');
+	//scene.add (grid)
+    grid.rotation.x = Math.PI/2
+    
+	window.addEventListener('resize', onWindowResize, false);
+
+////////////////////////////////////////////////////
+	level0make();
+	makecilck();
+	level0ballmake()
+////////////////////////////////////////////////////////////
+	
+////////////////////////////////////////////////////////////
+
+	raycaster = new THREE.Raycaster();
+
+
+	document.addEventListener('mousemove', onDocumentMouseMove, false);
+	document.addEventListener('mousedown', onDocumentMouseDown, false);
+	document.addEventListener( 'keydown', onDocumentKeyDown, false );
+	document.addEventListener( 'keyup', onDocumentKeyUp, false );
+	
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    
+	interval = timeCount()
+}
+
+
+function makecilck() {
+	let loader = new THREE.TextureLoader()
+	loader.crossOrigin = '';
+	
+	texture = loader.load('strts/start.png');
+	
+	cilck1 = new THREE.Mesh(new THREE.CircleGeometry(13,32),new THREE.MeshBasicMaterial({
+		transparent: true,
+		map: texture,
+		needsUpdate : true
+	}));
+	cilck1.number = -1;
+	scene.add(cilck1);
+	pickables.push(cilck1);
+	cilck1.position.set(120,-90,0);
+
+	var cilck2 = new THREE.Mesh(new THREE.CircleGeometry(13,32),new THREE.MeshBasicMaterial({
+		transparent: true,
+		map: loader.load("strts/restart.png")
+	}));
+	cilck2.number = -2;
+	scene.add(cilck2);
+	pickables.push(cilck2);
+	cilck2.position.set(155,-90,0);
+
+	var cilck3 = new THREE.Mesh(new THREE.CircleGeometry(13,32),new THREE.MeshBasicMaterial({
+		transparent: true,
+		map: loader.load("strts/stop.png")
+	}));
+	cilck3.number = -3;
+	scene.add(cilck3);
+	pickables.push(cilck3);
+	cilck3.position.set(190,-90,0);
+	console.log(cilck1)
+}
+
+function level0make(){
+	var rect = new Rect(new THREE.Vector3(15,22,0), [45,10]);
+    rect.moveTo (55,-10)
+	var rect1 = new Rect(new THREE.Vector3(15,22,0), [15,10]);
+	rect1.moveTo (-20, 42)
+	rect1.rotateTo (-Math.PI/4)
+	var rect2 = new Rect(new THREE.Vector3(15,22,0), [75,10]);
+	rect2.moveTo (-50, -10)
+	
+	objects = [rect,rect1,rect2]
+	
+	var ccrect = new Rect(new THREE.Vector3(15,22,0), [15,10],"myccrect","1");
+	ccrect.moveTo (-135,20)
+	objects.push(ccrect)
+	cube.push(ccrect)
+	
+	var finishss = new ggrect(new THREE.Vector3(15,22,0), [10,7.5]);
+	finishss.moveTo (60,-1.5)
+	objects.push(finishss)
+	
+	pickables = [finishss.obj,ccrect.obj,rect.obj,rect1.obj,rect2.obj];
+	
+	let brickf = new THREE.Mesh (new THREE.BoxGeometry(15,10,0), new THREE.MeshBasicMaterial({ color: 0xff0000, opacity: 0.3, transparent: true }));
+	brickf.name = "mybrickf";
+	brickf.position.set (10,-10,10);
+	scene.add(brickf);
+	
+	for(let y = 0 ; y < cube.length;y++){
+		angle[y] = Math.PI/6;
+	}
+    ///////////
+    
+	setTimeout(function(){ clearInterval(intervalId);}, 121500);//過120秒後停止
+	intervalId = setInterval(updateCounter, 1000);
+if(ss===1){    
+		document.getElementById('score1').textContent = `${score}`; 
+	}
+	if(ss===0) {
+      	document.getElementById('score1').textContent = "0"; 
+	}
+	////////
+}
+
+function level0ballmake(){
+
+	var ball0 = new Ball(new THREE.Vector3(),5);
+    ball0.moveTo (-15,52)
+	
+	balls = [ball0];
+	console.log(balls)
+	
+	objects.push(ball0)
+
+}
+
+function level1make(){
+	var rect = new Rect(new THREE.Vector3(15,22,0), [75,10]);
+    rect.moveTo (63,-22)
+	rect.rotateTo (Math.PI/2)
+	var rect1 = new Rect(new THREE.Vector3(15,22,0), [15,10]);
+	rect1.moveTo (-11, 41.5)
+	rect1.rotateTo (Math.PI/4)
+	var rect2 = new Rect(new THREE.Vector3(15,22,0), [150,10]);
+	rect2.moveTo (-7, -64.5)
+	var rect3 = new Rect(new THREE.Vector3(15,22,0), [75,10]);
+	rect3.moveTo (-77, -22)
+	rect3.rotateTo (Math.PI/2)
+	var rect4 = new Rect(new THREE.Vector3(15,22,0), [45,10]);
+	rect4.moveTo (-7, -37)
+	rect4.rotateTo (Math.PI/2)
+	var rect5 = new Rect(new THREE.Vector3(15,22,0), [75,10]);
+	rect5.moveTo (30.5, 20)
+	
+	objects = [rect,rect1,rect2,rect3,rect4,rect5]
+	
+	var ccrect = new Rect(new THREE.Vector3(15,22,0), [15,10],"myccrect","1");
+	ccrect.moveTo (-135,20)
+	objects.push(ccrect)
+	cube.push(ccrect)
+	
+	var ccrect2 = new Rect(new THREE.Vector3(15,22,0), [15,10],"myccrect","2",1.2);
+	ccrect2.mesh.material.map = THREE.ImageUtils.loadTexture("https://i.imgur.com/AvD3b7X.jpg");
+	ccrect2.moveTo (-135,50)
+	objects.push(ccrect2)
+	cube.push(ccrect2)
+	
+	var finishss = new ggrect(new THREE.Vector3(15,22,0), [10,7.5]);
+	finishss.moveTo (40,-56)
+	objects.push(finishss)
+	
+	pickables = [finishss.obj,ccrect.obj,ccrect2.obj,rect.obj,rect1.obj,rect2.obj,rect3.obj,rect4.obj,rect5.obj];
+	
+	for(let y = 0 ; y < cube.length;y++){
+		angle[y] = Math.PI/6;
+	}
+    ////////////
+
+	score = 0;
+	if(ss==1){
+	setTimeout(function(){ clearInterval(intervalId);}, 2000);//過120秒後停止 121500
+	intervalId = setInterval(updateCounter(), 1000);
+	}
+	if(ss===1){    
+		document.getElementById('score1').textContent = `${score}`; 
+	}
+	if(ss===0) {
+      	//document.getElementById('score1').textContent = "0"; 
+		console.log("timeup")
+		thisfinish();
+	}
+	///////////////
+}
+
+function level1ballmake(){
+
+	var ball0 = new Ball(new THREE.Vector3(),5);
+    ball0.moveTo (-15,52)
+	
+	balls = [ball0];
+	console.log(balls)
+	
+	objects.push(ball0)
+
+}
+
+function onWindowResize() {
+  whRatio = window.innerWidth/window.innerHeight;
+	halfH = 140;
+  halfW = halfH*whRatio
+	
+  camera.left = -halfW; camera.right = halfW;
+  camera.top = halfH; camera.bottom = -halfH;
+  camera.updateProjectionMatrix();
+	
+  renderer.setSize(window.innerWidth, window.innerHeight);
+}
+
+function onDocumentMouseDown(event) {
+  event.preventDefault();
+  mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+  mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+
+  // find intersections
+  raycaster.setFromCamera(mouse, camera); 
+  var intersects = raycaster.intersectObjects(pickables,true);
+  
+  if (intersects.length > 0) {	
+	console.log(intersects)
+	//console.log(cube[2].number);
+	if(isShiftDown){
+		console.log('132')
+		if (intersects[0].object.number === 0 ) {
+			//console.log(intersects[0]);
+			//console.log(intersects[0].object.number);
+		} 
+		else{
+			let picked = intersects[0].object.number;
+			console.log(picked);
+			var move = intersects[0].point.clone();
+
+			if(picked > 0){
+					var smallangle;
+					movetest = picked-1;
+					smallangle = angle[movetest];
+					angle[movetest] += Math.PI/6
+					console.log(smallangle)
+					cube[movetest].rotateTo(smallangle)
+					pickables.remove
+			}
+		}
+	
+	}
+	else{
+		if (intersects[0].object.number === 0 ) {
+			//console.log(intersects[0]);
+			//console.log(intersects[0].object.number);
+		} 
+		
+		else if(intersects[0].object.number === -1){
+			clickplay();
+			start = !start;
+			if(start){
+			addf = false
+			cilck1.material.map = THREE.ImageUtils.loadTexture("strts/pause.png");
+			}
+			else {
+			cilck1.material.map = THREE.ImageUtils.loadTexture("strts/start.png");
+			}
+			
+		}
+		else if(intersects[0].object.number === -2){
+			clickplay();
+			console.log("fggfgfg")
+			smallRE(levelnum);
+			start = false
+			cilck1.material.map = THREE.ImageUtils.loadTexture("strts/start.png");
+		}
+		else if(intersects[0].object.number === -3){
+			clickplay();
+			bigRE(levelnum);
+			start = false
+			cilck1.material.map = THREE.ImageUtils.loadTexture("strts/start.png");
+		}
+		else if(intersects[0].object.number === -4){
+			clickplay();
+			//scene.remove(bigcube)
+			//console.log(pickables)
+			refinish(levelnum)
+			/*scene.remove.apply(scene, scene.children);
+			init();*/
+		}
+		else if(intersects[0].object.number === -5){
+			clickplay();
+			console.log("fggfgfg")
+			levelnum++;
+			buildlevel(levelnum);
+			
+		}
+		else{
+			let picked = intersects[0].object.number;
+			
+			console.log(picked);
+			var move = intersects[0].point.clone();
+
+			if(picked > 0){
+				addf = !addf;
+				if(addf == true){
+					movetest = picked-1;
+					console.log(cube[movetest])
+					console.log(addf)
+					console.log(move)
+				}
+				else{
+					addf = false;
+					console.log(addf)
+					console.log(cube[movetest])
+					console.log(move)
+					cube[movetest].moveTo(move.x,move.y)
+				}
+			}
+		}
+	}
+  }
+}
+
+function onDocumentMouseMove(event) {
+  event.preventDefault();
+	mouse.x = ( event.clientX / window.innerWidth ) * 2 - 1;
+	mouse.y = - ( event.clientY / window.innerHeight ) * 2 + 1;
+	
+	var vector = new THREE.Vector3( mouse.x, mouse.y, 0.5 ).unproject( camera );
+	raycaster.setFromCamera(mouse, camera);
+
+	
+	var intersects1 = raycaster.intersectObjects(pickables,true);
+	if (intersects1.length > 0) {
+		var move = intersects1[0].point.clone();
+		if(addf == true ){
+		console.log(movetest)
+			cube[movetest].obj.position.copy (move);
+		}
+  }
+}
+
+function onDocumentKeyDown( event ) {
+				switch ( event.keyCode ) {
+					case 16: isShiftDown = true; break;
+				}
+			}
+			
+function onDocumentKeyUp( event ) {
+				switch ( event.keyCode ) {
+					case 16: isShiftDown = false; break;
+				}
+			}
+
+function animate() {
+
+	// apply gravity force to all balls
+if(start == true){
+  for (let i = 0; i < balls.length; i++)
+  	balls[i].force.set (0,-10,0)
+  for (let i = 0; i < balls.length; i++)
+  	balls[i].update(0.1)
+}
+///////////////
+    
+if(seconds < 1){
+	clearInterval(interval);
+}
+
+////////////////////////
+collision();
+  //stats.update();
+  requestAnimationFrame(animate);
+  renderer.render(scene, camera);
+}
+
+</script><canvas width="995" height="722" style="width: 995px; height: 722px;"></canvas>
+
+</body></html>
