@@ -2,7 +2,6 @@
 <style>
 #info {
   position: absolute;
-  top: 0px;
   width: 100%;
   padding: 10px;
   text-align: center;
@@ -10,51 +9,61 @@
 }
 #Score {
   position: absolute;
-  top: 1%;
-  width: 150%;
-  padding: 10px;
+  padding: 25px;
   text-align: center;
-  color: #ffff00
+  color: #ffff00;
+  left:70%;
+  top: -3%;
 }
 #remainingTime {
   position: absolute;
-  top: 2%;
-  width: 148.5%;
   padding: 25px;
   text-align: center;
-  color: #ffff00
+  color: #ffff00;
+  left:70%;
 }
 
 body {
   overflow: hidden;
 }
 
-
+div {margin:5px}
 </style>
 </head>
 
 <body> 
-
-<h1 id="info">Phy Games<br>
-	<strong>shift + click</strong>: rotate <br>
+<h1 id="info">Phy Games
+<br>
+	<div>
+	<strong>shift + click</strong>: rotate 
+	</div>
 </h1>
 
-
-<h2 id="remainingTime">Time : 
-<p id="counter" style="position:absolute;top:15%;left:55%">0</p>
+<div id ="remainingTime" >
+<h2 style ="width:300px">Time : 
+<div id="counter" style="float:right">0</div>
 </h2>
+</div>
 
-
-<h2 id="Score">Score : 
-<p id="score1" style="position:absolute;top:1%;left:55%">150</p>
+<div id="Score" >
+<h2 style ="width:300px">Score : 
+<div id="score1" style="float:right">150</div>
 </h2>
+</div>
 <div id= "broadcast" style="width:42%;height:45%;position:absolute;left: 30%;top: 25%;visibility: hidden;">
 	<h1 style="font-family:Microsoft JhengHei;color:red;font-size: 600%;text-align: center;margin-top: 0px;margin-bottom: 0px;padding-top: 0px;">ＷＩＮ！！</h1>
+	
+	<div>
 	<h2 style="font-family:Microsoft JhengHei;top: 35%;position: absolute;left: 5%;font-size: 300%;">Score :</h2>
-	<h2 style="font-family:Microsoft JhengHei;top: 60%;position: absolute;left: 5%;font-size: 300%;">Time  :</h2>
 	<div id="numScore" style="position:absolute;top: 40%;left: 50%;font-size: 500%;">90</div>
+	</div>
+	
+	<div>
+	<h2 style="font-family:Microsoft JhengHei;top: 60%;position: absolute;left: 5%;font-size: 300%;">Time  :</h2>
 	<div id="numTime" style="position:absolute;top: 65%;left: 50%;font-size: 500%;">50</div>
+	</div>
 </div>
+
 <audio id="soundtrack" autoplay="" loop="" style="display:none">
 	<source src="sound/BGM.mp3" type="audio/mp3">
 </audio>
@@ -95,9 +104,10 @@ var seconds = 0
 var countC = true;
 var temp = 0;
 
+
 function timeCount (){
 	setTimeout(function () {
-		console.log("1  "+seconds);
+		//console.log("1  "+seconds);
         if (countC == true) {
             seconds++;
 			timeCount ();
@@ -141,6 +151,25 @@ function scoreDown(){
 	}
 }
 
+function thankPlane(){
+
+	let loader = new THREE.TextureLoader()
+	loader.crossOrigin = '';
+	var finishplane =  new THREE.Mesh(new THREE.PlaneGeometry(500, 300), new THREE.MeshBasicMaterial({
+    transparent: true,
+    //opacity: 0.5,
+	map: loader.load("strts/finish.png"),
+    //visible: true
+  }));
+	finishplane.number = 0;
+	
+	console.log("123kk")
+	
+	finishplane.position.z = 100;
+	scene.add(finishplane)
+	pickables.push(finishplane)
+}
+
 ///////////////////////////////////////
 function clickplay(){
 	click.pause();
@@ -152,6 +181,12 @@ function springPlay(){
 	springcrash.pause();
     springcrash.currentTime = 0;
 	springcrash.play();
+}
+
+function crashPlay(){
+    crash.pause();
+    crash.currentTime = 0;
+	crash.play();
 }
 
 function checkIntersect (rect, ball) {
@@ -280,7 +315,7 @@ function intersect (obj1, obj2) {
 	
 	else if (obj1.type === 'rect' && obj2.type === 'ball') {
 		if((hit = checkIntersect(obj1, obj2))>=0){
-			console.log(hit)
+			//console.log(hit)
 			ballrectIntersect (obj1, obj2,hit)
 			}
 	}
@@ -313,20 +348,16 @@ function intersect (obj1, obj2) {
 		ballBallIntersect (obj1, obj2,hit)
 	}
 	
-function myStop(){
-    crash.pause();
-    crash.currentTime = 0;
-}
+
 
 function ballrectIntersect (rect, ball, hit) {
 	//let hit;
 	//if((hit = checkIntersect(rect, ball))>=0){
 	if(rect.resCoeff != 0.9){
-		springPlay();
+		springPlay()
 	}
 	else{
-		myStop();
-		crash.play();
+		crashPlay()
 	}
 	if(hit === 0){
 		let point = new THREE.Vector3();
@@ -532,7 +563,7 @@ function ballrectIntersect (rect, ball, hit) {
 			console.log(v12)
 			
 			//b1.vel.sub (n.clone().multiplyScalar (v12.dot(n)*2*b2.mass/(b1.mass+b2.mass) ))
-			ball.vel.add (n.clone().multiplyScalar (v12.dot(n)*2*1 ))
+			ball.vel.add (n.clone().multiplyScalar (v12.dot(n)*2*1.2 ))
 			
 			//console.log ('after:'+b1.vel.x)
 				// position correction
@@ -580,14 +611,10 @@ function ballrectIntersect (rect, ball, hit) {
 		}
 	}
 
-function ballBallIntersect (b1, b2) {
-
-	myStop();
-	crash.play();
-	
+function ballBallIntersect (b1, b2,hit) {	
 	let centerDist = b1.pos.distanceTo (b2.pos)
   if (centerDist < b1.rad + b2.rad) {
-
+	crashPlay();
   	console.log ('ball-ball hit')
 	let p1 = b1.pos;
     let p2 = b2.pos;
@@ -694,8 +721,8 @@ function refinish(num){
 	level1ballmake();
 	}
 	if(num==2){
-	level0make();
-	level0ballmake();
+	level2make();
+	level2ballmake();
 	}
 	if(num==3){
 	level0make();
@@ -725,23 +752,29 @@ function buildlevel(num){
 	
 	}
 	if(num == 1){
-	
-	level1make();
-	level1ballmake();
-		
+		level1make();
+		level1ballmake();
+		/////////////////////
+		makecilck()
+		TimeRE();
+		timeCount ();
+		document.getElementById( "broadcast" ).style.visibility = "hidden";
 	}
+	
 	if(num == 2){
-	level2make();
-	level2ballmake();
+		level2make();
+		level2ballmake();
+		/////////////////////////////
+		makecilck()
+		TimeRE();
+		timeCount ();
+		document.getElementById( "broadcast" ).style.visibility = "hidden";
 	}
 	
 	if(num == 3){
+		document.getElementById( "broadcast" ).style.visibility = "hidden";
+		thankPlane();
 	}
-	makecilck()
-	
-	TimeRE();
-	timeCount ();
-	document.getElementById( "broadcast" ).style.visibility = "hidden";
 }
 
 var start = false;
@@ -1182,7 +1215,7 @@ function onDocumentMouseDown(event) {
 			console.log("fggfgfg")
 			levelnum++;
 			buildlevel(levelnum);
-			
+
 		}
 		else{
 			let picked = intersects[0].object.number;
